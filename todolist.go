@@ -61,6 +61,54 @@ func UpdateItem(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func DeleteItem(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, _ := strconv.Atoi(vars["id"])
+
+	err := GetItemByID(id)
+	if err == false {
+		w.Header().Set("Content-Type", "application/json")
+		io.WriteString(w, `{"deleted": false, "error": "Record Not Found"}`)
+	} else {
+		log.WithFields(log.Fields{"Id": id}).Info("Deleting TodoItem")
+		todo := &TodoItemModel{}
+		db.First(&todo, id)
+		db.Delete(&todo)
+		w.Header().Set("Content-Type", "application/json")
+		io.WriteString(w, `{"deleted": true}`)
+	}
+}
+
+func GetItemByID(Id int) bool {
+	todo := &TodoItemModel{}
+	result := db.First(&todo, Id)
+	if result.Error != nil {
+		log.Warn("TodoItem not found in database")
+		return false
+	}
+	return true
+}
+
+func GetCompletedItems(w http.ResponseWriter, r *http.Request) {
+	log.Info("Get completed TodoItems")
+	completedTodoItems := GetTodoItems(true)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(completedTodoItems)
+}
+
+func GetIncompleteItems(w http.ResponseWriter, r *http.Request) {
+	log.Info("Get Incomplete TodoItems")
+	IncompleteTodoItems := GetTodoItems(true)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(IncompleteTodoItems)
+}
+
+func GetTodoItems(completed bool) interface{} {
+	var todos []TodoItemModel
+	TodoItems := db.Where("completed = ?", completed).Find(&todos).Value
+	return TodoItems
+}
+
 func main() {
 	defer db.Close()
 	db.Debug().DropTableIfExists(&TodoItemModel{})
@@ -69,6 +117,10 @@ func main() {
 	log.Info("Starting Todolist API server")
 	router := mux.NewRouter()
 	router.HandleFunc("/health", Health).Methods("GET")
+	router.HandleFunc("/todo-completed", GetCompletedItems).Methods("GET")
+	router.HandleFunc("/todo-incomplet", GetIncompleteItems).Methods("GET")
 	router.HandleFunc("/todo", CreateItem).Methods("POST")
+	router.HandleFunc("/todo/{id}", UpdateItem).Methods("POST")
+	router.HandleFunc("/todo/{id}", DeleteItem).Methods("DELETE")
 	http.ListenAndServe(":8000", router)
 }
