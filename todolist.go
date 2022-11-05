@@ -51,7 +51,7 @@ func UpdateItem(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		io.WriteString(w, `{"updated": false, "error": "Record Not Found"}`)
 	} else {
-		completed, _ := strconv.ParseBool(r.FormValue("completed"))
+		completed, _ := strconv.ParseBool(r.FormValue("Completed"))
 		log.WithFields(log.Fields{"Id": id, "Completed": completed}).Info("Updating TodoItem")
 		todo := &TodoItemModel{}
 		db.First(&todo, id)
@@ -97,6 +97,13 @@ func GetCompletedItems(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(completedTodoItems)
 }
 
+func GetAllItems(w http.ResponseWriter, r *http.Request) {
+	log.Info("Get All TodoItems")
+	AllTodoItems := GetAllTodoItems()
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	json.NewEncoder(w).Encode(AllTodoItems)
+}
+
 func GetIncompleteItems(w http.ResponseWriter, r *http.Request) {
 	log.Info("Get Incomplete TodoItems")
 	IncompleteTodoItems := GetTodoItems(true)
@@ -109,6 +116,11 @@ func GetTodoItems(completed bool) interface{} {
 	TodoItems := db.Where("completed = ?", completed).Find(&todos).Value
 	return TodoItems
 }
+func GetAllTodoItems() interface{} {
+	var todos []TodoItemModel
+	TodoItems := db.Find(&todos).Value
+	return TodoItems
+}
 
 func main() {
 	defer db.Close()
@@ -118,13 +130,17 @@ func main() {
 	log.Info("Starting Todolist API server")
 	router := mux.NewRouter()
 	router.HandleFunc("/health", Health).Methods("GET")
+	router.HandleFunc("/todo-all", GetAllItems).Methods("GET")
 	router.HandleFunc("/todo-completed", GetCompletedItems).Methods("GET")
-	router.HandleFunc("/todo-incomplet", GetIncompleteItems).Methods("GET")
+	router.HandleFunc("/todo-incomplete", GetIncompleteItems).Methods("GET")
 	router.HandleFunc("/todo", CreateItem).Methods("POST")
 	router.HandleFunc("/todo/{id}", UpdateItem).Methods("POST")
 	router.HandleFunc("/todo/{id}", DeleteItem).Methods("DELETE")
 	handler := cors.New(cors.Options{
+		AllowedOrigins: []string{"*"},
 		AllowedMethods: []string{"GET", "POST", "DELETE", "PATCH", "OPTIONS"},
+		AllowedHeaders: []string{"Origin", "Authorization", "Content-Type"},
+		ExposedHeaders: []string{""},
 	}).Handler(router)
 	http.ListenAndServe(":8000", handler)
 }
