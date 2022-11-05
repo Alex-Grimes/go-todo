@@ -1,6 +1,7 @@
 import { ref, computed, } from "vue";
 import { defineStore } from "pinia";
 import axios from "axios"
+import FormData from "form-data"
 
 //type Todo = { id: string; description: string; isCompleted: boolean };
 
@@ -36,8 +37,10 @@ export const useTodoStore = defineStore("counter", () => {
         description,
       },
     ];
-    axios({ method: "Post", url: "http://127.0.0.1:8000/todo", data: {Description: description},headers: {"content-type": "application/json" } }).catch( error => { 
-        console.error(error);
+    var data = new FormData();
+    data.append('Description', description)
+    axios({ method: "Post", url: "http://127.0.0.1:8000/todo",headers: data.getHeaders ? data.getHeaders() : { 'Content-Type': 'multipart/form-data' }, data: data  }).catch( error => { 
+      console.error(error);
     });
   }
 
@@ -48,7 +51,10 @@ export const useTodoStore = defineStore("counter", () => {
   function toggleTodo(id) {
     todos.value.forEach((todo) => {
       if (todo.Id === id){
-        axios({ method: "Post", url: `http://127.0.0.1:8000/todo/`+ todo.Id, data: {Completed: todo.Completed ? false : true},headers: {"content-type": "application/json" } }).catch( error => { 
+        var data = new FormData();
+        let value = !todo.Completed ? 'true' : 'false'
+        data.append('Completed', value);
+        axios({ method: "Post", url: `http://127.0.0.1:8000/todo/`+ todo.Id,headers: data.getHeaders ? data.getHeaders() : { 'Content-Type': 'multipart/form-data' }, data: data  }).catch( error => { 
           console.error(error);
     });
   }})}
