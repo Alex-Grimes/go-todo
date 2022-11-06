@@ -38,7 +38,7 @@ export const useTodoStore = defineStore("counter", () => {
       },
     ];
     var data = new FormData();
-    data.append('Description', description)
+    data.append('description', description)
     axios({ method: "Post", url: "http://127.0.0.1:8000/todo",headers: data.getHeaders ? data.getHeaders() : { 'Content-Type': 'multipart/form-data' }, data: data  }).catch( error => { 
       console.error(error);
     });
@@ -53,14 +53,22 @@ export const useTodoStore = defineStore("counter", () => {
       if (todo.Id === id){
         var data = new FormData();
         let value = !todo.Completed ? 'true' : 'false'
-        data.append('Completed', value);
+        data.append('completed', value);
         axios({ method: "Post", url: `http://127.0.0.1:8000/todo/`+ todo.Id,headers: data.getHeaders ? data.getHeaders() : { 'Content-Type': 'multipart/form-data' }, data: data  }).catch( error => { 
           console.error(error);
     });
   }})}
 
   function clearCompletedTodos() {
+    todos.value = todos.value.filter((todo) => todo.Completed === true);
+    var data = new FormData();
+    todos.value.forEach(element => {
+      axios({ method: "Delete", url: `http://127.0.0.1:8000/todo/`+ element.Id,headers: data.getHeaders ? data.getHeaders() : { 'Content-Type': 'multipart/form-data' }, data: data  }).catch( error => { 
+        console.error(error);
+      });
+    });
     todos.value = todos.value.filter((todo) => todo.Completed === false);
+
   }
 
   return {

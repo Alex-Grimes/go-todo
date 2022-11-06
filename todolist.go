@@ -125,7 +125,7 @@ func GetAllTodoItems() interface{} {
 
 func main() {
 	defer db.Close()
-	db.Debug().DropTableIfExists(&TodoItemModel{})
+	//db.Debug().DropTableIfExists(&TodoItemModel{})
 	db.Debug().AutoMigrate(&TodoItemModel{})
 
 	log.Info("Starting Todolist API server")
