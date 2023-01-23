@@ -37,6 +37,8 @@ Clear completed todos
 <li className="todo">
 <input type="checkbox" name="isCompleted" />
 <label>{todos[0].Description}</label>
+<label>{todos[0].Completed}</label>
+<label>{todos[0].Id}</label>
 </li>
 </ul><form className="addForm">
 <label>Add todo</label><div className="sl">
