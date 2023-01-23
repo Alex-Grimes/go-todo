@@ -42,7 +42,7 @@ Clear completed todos
 </li>
 </ul><form className="addForm">
 <label>Add todo</label><div className="sl">
-<input type="text" name="add" id="add" v-model="currentTodoInp" />
+<input type="text" name="add" id="add"/>
 <button type="submit">Add</button>
 </div>
 </form>
